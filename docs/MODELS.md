@@ -12,15 +12,15 @@ UserMembership
 	-membership type			(foreignkey to Membership)
 
 Subscription
-	-user membership
-	-stripe subscription id 	(foreignkey to UserMembership)
+	-user membership 			(foreignkey to UserMembership)
+	-stripe subscription id 	
 	-active
 
 Course
 	-slug
 	-title
 	-description
-	-allowed memberships		(foreignkey to Membership)
+	-allowed memberships		(ManyToManyField to Membership)
 
 Lesson
 	-slug
