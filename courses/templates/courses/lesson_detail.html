@@ -4,6 +4,15 @@
 	<title></title>
 </head>
 <body>
-	{{ object }}
+	<h1>Lesson Detail View</h1>
+	{% if object is not None %}
+		{{ object.title }}
+		{{ object.description }}
+	{% else %}
+		<h3>Upgrade membership</h3>
+		
+	{% endif %}
+	
+	
 </body>
 </html>

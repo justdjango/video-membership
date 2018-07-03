@@ -1,7 +1,5 @@
 from django.db import models
-
 from django.urls import reverse
-
 
 from memberships.models import Membership
 
@@ -21,7 +19,6 @@ class Course(models.Model):
 	@property
 	def lessons(self):
 		return self.lesson_set.all().order_by('position')
-
 
 
 class Lesson(models.Model):
