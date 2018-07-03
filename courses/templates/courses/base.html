@@ -6,6 +6,29 @@
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 </head>
 <body>
+
+	{% include 'courses/messages.html' %}
+
+	<div class="container">
+		<ol class='breadcrumb'>
+	        <li><a href='/'>Home</a></li>
+	        <li><a href='/profile'>Profile</a></li>
+	        
+	        {% block post_detail_link %}
+	        {% endblock %}
+
+	        {% if not request.user.is_authenticated %}
+	        <li class='pull-right'><a href='/register'>Register</a></li>
+	        <li class='pull-right'><a href='/login'>Login</a></li>
+	        {% else %}
+	        <li class='pull-right'><a href='/memberships'>Memberships</a></li>
+	        {% endif %}
+	    </ol>
+	</div>
+
+	{% block content %}
+	{% endblock content %}
+
 	<script
   	src="https://code.jquery.com/jquery-3.3.1.js"
   	integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60="

@@ -1,12 +1,8 @@
-<!DOCTYPE html>
-<html>
-<head>
-	<title></title>
-</head>
-<body>
+{% extends 'courses/base.html' %}
+
+{% block content %}
 	{{ object.title }}
 	{% for lesson in object.lessons %}
 		<a href="{{ lesson.get_absolute_url }}">{{ lesson.title }}</a>
 	{% endfor %}
-</body>
-</html>
+{% endblock %}

@@ -1,13 +1,9 @@
-<!DOCTYPE html>
-<html>
-<head>
-	<title></title>
-</head>
-<body>
+{% extends 'courses/base.html' %}
+
+{% block content %}
 	<h1>Course List View Page</h1>
 	{% for object in object_list %}
 		<a href="{{ object.get_absolute_url }}">{{ object }}</a>
 	{% endfor %}
 
-</body>
-</html>
+{% endblock %}
