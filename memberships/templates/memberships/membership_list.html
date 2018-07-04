@@ -1,0 +1,16 @@
+{% extends 'courses/base.html' %}
+
+
+{% block content %}
+<div class="container">
+	<h1>Select a membership</h1>
+	<div class="row">
+		{% for object in object_list %}
+			{{ object.membership_type }}
+		{% endfor %}
+	</div>
+</div>
+
+
+
+{% endblock content %}
