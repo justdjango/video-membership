@@ -39,10 +39,16 @@
   </form>
   
   </div>
-
-  <div id="stripe-token-handler" class="is-hidden">Success! Got token: <span class="token"></span></div>
-
+  
 </div>
+
+<div id="stripe-token-handler" class="is-hidden">Success! Got token: <span class="token"></span></div>
+
+
+		</div>
+	</div>
+</div>
+
 
 <!-- script for the stripe form -->
 <script src="{% static 'js/checkout.js' %}"></script>
@@ -60,14 +66,6 @@
       }
     };
 </script>
-
-
-
-
-		</div>
-	</div>
-</div>
-
 
 
 {% endblock content %}
