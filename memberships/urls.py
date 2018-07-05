@@ -7,5 +7,4 @@ app_name = 'memberships'
 urlpatterns = [
     path('', MembershipSelectView.as_view(), name='select'),
     path('payment', PaymentView, name='payment')
-
 ]

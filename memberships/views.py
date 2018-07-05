@@ -81,14 +81,28 @@ def PaymentView(request):
 
 	publishKey = settings.STRIPE_PUBLISHABLE_KEY
 
+	if request.method == "POST":
+		try:
+			token = request.POST['stripeToken']
+			stripe.Subscription.create(
+			  customer=user_membership.stripe_customer_id,
+			  items=[
+			    {
+			      "plan": selected_membership.stripe_plan_id,
+			    },
+			  ],
+			  source=token # 4242424242424242
+			)
+
+		except stripe.CardError as e:
+			messages.info(request, "Your card has been declined")
+
 	context = {
 		'publishKey': publishKey,
 		'selected_membership': selected_membership
 	}
 
 	return render(request, "memberships/membership_payment.html", context)
-
-
 
 
 
