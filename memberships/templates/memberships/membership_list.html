@@ -8,7 +8,7 @@
 		{% for object in object_list %}
 		<div class="col-sm-4 col-md-4">
 			<h2>{{ object.membership_type }}</h2>
-			<p>Price: ${{ object.monthly_price }}<small>/month</small></p>
+			<p>Price: ${{ object.price }}<small>/month</small></p>
 			<h4>Included Courses</h4>
 			<ul>
 				{% for course in object.course_set.all %}
