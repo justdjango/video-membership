@@ -11,7 +11,7 @@
 
 				{% if user_subscription.active != False %}
 					<p>Next payment due: {{ user_subscription.get_next_billing_date }}</p>
-					<a href="#">Cancel subscription</a>
+					<a href="{% url 'memberships:cancel' %}">Cancel subscription</a>
 
 				{% else %}
 					<p>You don't have an active membership plan. Check them out here 

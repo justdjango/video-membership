@@ -19,7 +19,6 @@ def profile_view(request):
 	}
 	return render(request, "memberships/profile.html", context)
 
-
 def get_user_membership(request):
 	user_membership_qs = UserMembership.objects.filter(user=request.user)
 	if user_membership_qs.exists():
@@ -138,6 +137,52 @@ def updateTransactionRecords(request, subscription_id):
 
 	messages.info(request, 'Successfully created {} membership'.format(selected_membership))
 	return redirect('/memberships')
+
+
+def cancelSubscription(request):
+	user_sub = get_user_subscription(request)
+
+	if user_sub.active == False:
+		messages.info(request, "You dont have an active membership")
+		return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+	sub = stripe.Subscription.retrieve(user_sub.stripe_subscription_id)
+	sub.delete()
+
+	user_sub.active = False
+	user_sub.save()
+
+
+	free_membership = Membership.objects.filter(membership_type='Free').first()
+	user_membership = get_user_membership(request)
+	user_membership.membership = free_membership
+	user_membership.save()
+
+	messages.info(request, "Successfully cancelled membership. We have sent an email")
+	# sending an email here
+
+	return redirect('/memberships')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
