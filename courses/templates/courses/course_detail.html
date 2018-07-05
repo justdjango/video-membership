@@ -1,8 +1,24 @@
 {% extends 'courses/base.html' %}
 
+{% block post_detail_link %}
+<li>{{ object.title }}</li>
+{% endblock %}
+
 {% block content %}
-	{{ object.title }}
-	{% for lesson in object.lessons %}
-		<a href="{{ lesson.get_absolute_url }}">{{ lesson.title }}</a>
-	{% endfor %}
+	<div class="container">
+		<div class="row">
+			<div class="col-sm-4 col-md-4">
+				<h1>Course Detail View Page</h1>
+				<h3>{{ object.title }}</h3>
+				<p>{{ object.description }}</p>
+				<ol>
+					{% for lesson in object.lessons %}
+					<li><a href="{{ lesson.get_absolute_url }}">{{ lesson.title }}</a></li>
+					{% endfor %}
+				</ol>
+				
+			</div>
+		</div>
+	</div>
+
 {% endblock %}
