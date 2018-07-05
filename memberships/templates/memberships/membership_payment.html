@@ -1,7 +1,9 @@
 {% extends 'courses/base.html' %}
-
+{% load static %}
 
 {% block content %}
+
+ <link rel="stylesheet" type="text/css" href="{% static 'css/checkout.css' %}">
 
 
 <div class="container">
@@ -9,6 +11,59 @@
 		<h1>Payment</h1>
 		<div class="col-sm-4 col-md-4">
 			<p>Selected membership: {{ selected_membership }}</p>
+			<p>Price: <strong>${{ selected_membership.price }}</strong><small>/month</small></p>
+
+
+<button onclick="toggleDisplay();" class="btn btn-warning" style="width: 100%;">Checkout with a credit card</button>
+
+
+<div id="collapseStripe" class="wrapper">
+  <script src="https://js.stripe.com/v3/"></script>
+
+  <!-- can't do this -->
+  <!-- <script src="{% static 'js/stripeV3.js' %}"></script> -->
+
+  <form action="." method="post" id="payment-form">
+    {% csrf_token %}
+    <div class="form-row">
+      <label for="card-element">
+        Credit or debit card
+      </label>
+      <div id="card-element" class="StripeElement StripeElement--empty"><div class="__PrivateStripeElement" style="margin: 0px !important; padding: 0px !important; border: none !important; display: block !important; background: transparent !important; position: relative !important; opacity: 1 !important;"><iframe frameborder="0" allowtransparency="true" scrolling="no" name="__privateStripeFrame3" allowpaymentrequest="true" src="https://js.stripe.com/v3/elements-inner-card-8a434729e4eb82355db4882974049278.html#style[base][color]=%2332325d&amp;style[base][lineHeight]=18px&amp;style[base][fontFamily]=%22Helvetica+Neue%22%2C+Helvetica%2C+sans-serif&amp;style[base][fontSmoothing]=antialiased&amp;style[base][fontSize]=16px&amp;style[base][::placeholder][color]=%23aab7c4&amp;style[invalid][color]=%23fa755a&amp;style[invalid][iconColor]=%23fa755a&amp;componentName=card&amp;wait=false&amp;rtl=false&amp;features[noop]=false&amp;origin=https%3A%2F%2Fstripe.com&amp;referrer=https%3A%2F%2Fstripe.com%2Fdocs%2Fstripe-js%2Felements%2Fquickstart&amp;controllerId=__privateStripeController0" title="Secure payment input frame" style="border: none !important; margin: 0px !important; padding: 0px !important; width: 1px !important; min-width: 100% !important; overflow: hidden !important; display: block !important; height: 18px;"></iframe><input class="__PrivateStripeElement-input" aria-hidden="true" style="border: none !important; display: block !important; position: absolute !important; height: 1px !important; top: 0px !important; left: 0px !important; padding: 0px !important; margin: 0px !important; width: 100% !important; opacity: 0 !important; background: transparent !important; pointer-events: none !important; font-size: 16px !important;"><input class="__PrivateStripeElement-safariInput" aria-hidden="true" tabindex="-1" style="border: none !important; display: block !important; position: absolute !important; height: 1px !important; top: 0px !important; left: 0px !important; padding: 0px !important; margin: 0px !important; width: 100% !important; opacity: 0 !important; background: transparent !important; pointer-events: none !important; font-size: 16px !important;"></div></div>
+
+      <!-- Used to display form errors. -->
+      <div id="card-errors" role="alert"></div>
+    </div>
+
+    <button>Submit Payment</button>
+  </form>
+  
+  </div>
+
+  <div id="stripe-token-handler" class="is-hidden">Success! Got token: <span class="token"></span></div>
+
+</div>
+
+<!-- script for the stripe form -->
+<script src="{% static 'js/checkout.js' %}"></script>
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+
+<!-- script for toggling display of the form -->
+<script type="text/javascript">
+    function toggleDisplay() {
+      var x = document.getElementById("collapseStripe");
+      if (x.style.display === "none") {
+          x.style.display = "block";
+      } else {
+          x.style.display = "none";
+      }
+    };
+</script>
+
+
+
+
 		</div>
 	</div>
 </div>
