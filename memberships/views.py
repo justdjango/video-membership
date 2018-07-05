@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib import messages
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
@@ -80,6 +81,12 @@ def PaymentView(request):
 
 	publishKey = settings.STRIPE_PUBLISHABLE_KEY
 
+	context = {
+		'publishKey': publishKey,
+		'selected_membership': selected_membership
+	}
+
+	return render(request, "memberships/membership_payment.html", context)
 
 
 
