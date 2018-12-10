@@ -1,0 +1,3 @@
+env
+static_root
+**/*.pyc
