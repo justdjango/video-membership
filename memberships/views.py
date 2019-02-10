@@ -1,5 +1,7 @@
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.views.generic import ListView
@@ -8,17 +10,6 @@ from django.urls import reverse
 from .models import Membership, UserMembership, Subscription
 
 import stripe
-
-
-def profile_view(request):
-    user_membership = get_user_membership(request)
-    user_subscription = get_user_subscription(request)
-    context = {
-        'user_membership': user_membership,
-        'user_subscription': user_subscription
-    }
-    return render(request, "memberships/profile.html", context)
-
 
 def get_user_membership(request):
     user_membership_qs = UserMembership.objects.filter(user=request.user)
@@ -44,8 +35,18 @@ def get_selected_membership(request):
         return selected_membership_qs.first()
     return None
 
+@login_required
+def profile_view(request):
+    user_membership = get_user_membership(request)
+    user_subscription = get_user_subscription(request)
+    context = {
+        'user_membership': user_membership,
+        'user_subscription': user_subscription
+    }
+    return render(request, "memberships/profile.html", context)
 
-class MembershipSelectView(ListView):
+
+class MembershipSelectView(LoginRequiredMixin, ListView):
     model = Membership
 
     def get_context_data(self, *args, **kwargs):
@@ -57,14 +58,10 @@ class MembershipSelectView(ListView):
     def post(self, request, **kwargs):
         user_membership = get_user_membership(request)
         user_subscription = get_user_subscription(request)
-
         selected_membership_type = request.POST.get('membership_type')
 
-        selected_membership_qs = Membership.objects.filter(
+        selected_membership = Membership.objects.get(
             membership_type=selected_membership_type)
-        print(selected_membership_qs)
-        selected_membership = selected_membership_qs.first()
-        print(selected_membership)
 
         if user_membership.membership == selected_membership:
             if user_subscription is not None:
@@ -77,26 +74,38 @@ class MembershipSelectView(ListView):
 
         return HttpResponseRedirect(reverse('memberships:payment'))
 
-
+@login_required
 def PaymentView(request):
-
     user_membership = get_user_membership(request)
-
-    selected_membership = get_selected_membership(request)
-
+    try:
+        selected_membership = get_selected_membership(request)
+    except:
+        return redirect(reverse("memberships:select"))
     publishKey = settings.STRIPE_PUBLISHABLE_KEY
-
     if request.method == "POST":
         try:
             token = request.POST['stripeToken']
+
+            # UPDATE FOR STRIPE API CHANGE 2018-05-21
+
+            '''
+            First we need to add the source for the customer
+            '''
+
+            customer = stripe.Customer.retrieve(user_membership.stripe_customer_id)
+            customer.source = token # 4242424242424242
+            customer.save()
+
+            '''
+            Now we can create the subscription using only the customer as we don't need to pass their
+            credit card source anymore
+            '''
+
             subscription = stripe.Subscription.create(
                 customer=user_membership.stripe_customer_id,
                 items=[
-                    {
-                        "plan": selected_membership.stripe_plan_id,
-                    },
-                ],
-                source=token  # 4242424242424242
+                    { "plan": selected_membership.stripe_plan_id },
+                ]
             )
 
             return redirect(reverse('memberships:update-transactions',
@@ -104,8 +113,8 @@ def PaymentView(request):
                                         'subscription_id': subscription.id
                                     }))
 
-        except stripe.CardError as e:
-            messages.info(request, "Your card has been declined")
+        except:
+            messages.info(request, "An error has occurred, investigate it in the console")
 
     context = {
         'publishKey': publishKey,
@@ -114,11 +123,10 @@ def PaymentView(request):
 
     return render(request, "memberships/membership_payment.html", context)
 
-
+@login_required
 def updateTransactionRecords(request, subscription_id):
     user_membership = get_user_membership(request)
     selected_membership = get_selected_membership(request)
-
     user_membership.membership = selected_membership
     user_membership.save()
 
@@ -135,9 +143,9 @@ def updateTransactionRecords(request, subscription_id):
 
     messages.info(request, 'Successfully created {} membership'.format(
         selected_membership))
-    return redirect('/memberships')
+    return redirect(reverse('memberships:select'))
 
-
+@login_required
 def cancelSubscription(request):
     user_sub = get_user_subscription(request)
 
@@ -151,7 +159,7 @@ def cancelSubscription(request):
     user_sub.active = False
     user_sub.save()
 
-    free_membership = Membership.objects.filter(membership_type='Free').first()
+    free_membership = Membership.objects.get(membership_type='Free')
     user_membership = get_user_membership(request)
     user_membership.membership = free_membership
     user_membership.save()
@@ -160,4 +168,4 @@ def cancelSubscription(request):
         request, "Successfully cancelled membership. We have sent an email")
     # sending an email here
 
-    return redirect('/memberships')
+    return redirect(reverse('memberships:select'))

@@ -12,6 +12,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    
+    'django.contrib.sites',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
 
     'courses',
     'memberships'
@@ -83,10 +88,19 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(VENV_PATH, 'media_root')
 
 if DEBUG:
-    STRIPE_PUBLISHABLE_KEY = 'pk_test_v2AxsEXcGw05rWMNsTVFn0Mu'
-    STRIPE_SECRET_KEY = 'sk_test_2eQC29JtHcxGvsEaL0ODfqFa'
+    STRIPE_PUBLISHABLE_KEY = ''
+    STRIPE_SECRET_KEY = ''
 
 else:
     # live keys
     STRIPE_PUBLISHABLE_KEY = ''
     STRIPE_SECRET_KEY = ''
+
+# Django allauth
+
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+)
+
+SITE_ID = 1
