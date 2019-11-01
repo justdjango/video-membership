@@ -76,6 +76,11 @@ class MembershipSelectView(LoginRequiredMixin, ListView):
 
 @login_required
 def PaymentView(request):
+    user = request.user
+    try:
+        address = profile.address.get(address_type="home")
+    except:
+        address = None
     user_membership = get_user_membership(request)
     try:
         selected_membership = get_selected_membership(request)
@@ -83,42 +88,113 @@ def PaymentView(request):
         return redirect(reverse("memberships:select"))
     publishKey = settings.STRIPE_PUBLISHABLE_KEY
     if request.method == "POST":
-        try:
-            token = request.POST['stripeToken']
+        # try:
+        source = request.POST.get('stripeSource', "")
+        amend = request.POST.get('amend', '')
 
-            # UPDATE FOR STRIPE API CHANGE 2018-05-21
-
-            '''
-            First we need to add the source for the customer
-            '''
-
-            customer = stripe.Customer.retrieve(user_membership.stripe_customer_id)
-            customer.source = token # 4242424242424242
+        '''
+        First we need to add the source for the customer
+        '''
+        if amend == "true":
+            customer = stripe.Customer.modify(
+                user_membership.stripe_customer_id,
+                source=source,
+            )
             customer.save()
+        else:
+            customer = stripe.Customer.retrieve(
+                user_membership.stripe_customer_id)
 
+            try:
+                customer.source = source  # 4242424242424242
+                customer.save()
+            except:
+                messages.warning(
+                    request, "Your card has been failed or declined, Please try a different card")
+                context = {
+                    'publishKey': publishKey,
+                    'selected_membership': selected_membership,
+                    'address': address,
+                    'profile': profile,
+                    'amend': "true"
+                }
+                return render(request, "membership/membership_payment.html", context)
+
+        '''
+        before we make any subscriptions, we need to make sure there isn't any current active subscriptions for the customer.
+        Without this, we could get duplicates payment
+        We first fetch the customer to make sure we have the latest update
+        '''
+        customer = stripe.Customer.retrieve(user_membership.stripe_customer_id)
+        if customer.subscriptions.total_count > 0:
+            for i in customer.subscriptions.data:
+                if i.plan['id'] == selected_membership.stripe_plan_id and i.plan['active'] == True:
+                    messages.info(
+                        request, "Your have already subscribed to this plan")
+                    return redirect(reverse('memberships:update-transactions',
+                                            kwargs={
+                                                'subscription_id': i.id
+                                            }))
+                else:
+                    pass  # Maybe we can check if users have a subscription that needs renewing
+        else:
             '''
             Now we can create the subscription using only the customer as we don't need to pass their
             credit card source anymore
             '''
 
-            subscription = stripe.Subscription.create(
+            stripe_subscription = stripe.Subscription.create(
                 customer=user_membership.stripe_customer_id,
                 items=[
-                    { "plan": selected_membership.stripe_plan_id },
-                ]
+                    {"plan": selected_membership.stripe_plan_id},
+                ],
+                # billing="charge_automatically", #billing is depricated
+                collection_method="charge_automatically",
+                # idempotency_key='FXZMav7BbtEui1Z3', # we can add a random idempotency key too
             )
-
-            return redirect(reverse('memberships:update-transactions',
-                                    kwargs={
-                                        'subscription_id': subscription.id
-                                    }))
-
-        except:
-            messages.info(request, "An error has occurred, investigate it in the console")
+            '''
+            Here we check three different status of the subscription object according to API and if
+            secure 3D payment is required, we redirect them for the necessary payments.
+            '''
+            if stripe_subscription.status == "active":
+                return redirect(reverse('memberships:update-transactions',
+                                        kwargs={
+                                            'subscription_id': stripe_subscription.id
+                                        }))
+            elif stripe_subscription.status == "incomplete":
+                payment_intent = stripe_subscription.latest_invoice.payment_intent
+                if payment_intent.status == "requires_action":
+                    messages.info(
+                        request, "Your bank requires extra authentication")
+                    context = {
+                        "client_secret": payment_intent.client_secret,
+                        "STRIPE_PUBLIC_KEY": settings.STRIPE_PUBLISHABLE_KEY,
+                        "subscription_id": stripe_subscription.id
+                    }
+                    return render(request, "memberships/3d-secure-checkout.html", context)
+                elif payment_intent.status == "requires_payment_method":
+                    messages.warning(
+                        request, "Your card has been failed or declined, Please try a different card")
+                    context = {
+                        'publishKey': publishKey,
+                        'selected_membership': selected_membership,
+                        # 'client_secret': client_secret,
+                        'address': address,
+                        'profile': profile,
+                        'amend': "true"
+                    }
+                    return render(request, "memberships/membership_payment.html", context)
+                else:
+                    messages.info(
+                        request, "Something went wrong. Please report to the website admin.")
 
     context = {
         'publishKey': publishKey,
-        'selected_membership': selected_membership
+        'selected_membership': selected_membership,
+        # 'client_secret': client_secret,
+        'address': address,
+        'user': user,
+        'amend': "false"
     }
 
     return render(request, "memberships/membership_payment.html", context)
