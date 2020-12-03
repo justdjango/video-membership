@@ -9,6 +9,10 @@
   </p>
 </p>
 
+### *** Deprecation Warning ***
+
+This project is over two years old and is outdated. You can find the new version of this project [here](https://github.com/justdjango/dj-video-membership)
+
 # Video Membership Website
 
 This project shows how to create a video membership website using Django and Stripe billing.
